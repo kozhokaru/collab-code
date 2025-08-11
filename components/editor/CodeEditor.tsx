@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useEffect } from 'react'
+import { useRef, useEffect, useState } from 'react'
 import Editor from '@monaco-editor/react'
 import type { editor } from 'monaco-editor'
 import { useEditorStore } from '@/store/editorStore'
@@ -20,10 +20,12 @@ export function CodeEditor({
   readOnly = false
 }: CodeEditorProps) {
   const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null)
+  const [isEditorReady, setIsEditorReady] = useState(false)
   const { code, setCode, cursorPosition, setCursorPosition } = useEditorStore()
 
   const handleEditorDidMount = (editor: editor.IStandaloneCodeEditor) => {
     editorRef.current = editor
+    setIsEditorReady(true)
 
     // Track cursor position changes
     editor.onDidChangeCursorPosition((e) => {
@@ -103,7 +105,7 @@ export function CodeEditor({
           }
         }}
       />
-      <CursorOverlay editorInstance={editorRef.current} />
+      {isEditorReady && <CursorOverlay editorInstance={editorRef.current} />}
     </div>
   )
 }

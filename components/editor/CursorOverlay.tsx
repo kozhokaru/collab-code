@@ -15,6 +15,10 @@ export function CursorOverlay({ editorInstance }: CursorOverlayProps) {
   useEffect(() => {
     if (!editorInstance) return
 
+    // Check if the editor model is ready
+    const model = editorInstance.getModel()
+    if (!model) return
+
     // Clear previous decorations
     decorationsRef.current = editorInstance.deltaDecorations(
       decorationsRef.current,
@@ -27,13 +31,19 @@ export function CursorOverlay({ editorInstance }: CursorOverlayProps) {
     cursors.forEach((cursor) => {
       const userId = cursor.userId.replace(/[^a-zA-Z0-9]/g, '-')
       
+      // Validate cursor position
+      const lineCount = model.getLineCount()
+      const lineNumber = Math.min(Math.max(1, cursor.position.lineNumber), lineCount)
+      const lineContent = model.getLineContent(lineNumber)
+      const column = Math.min(Math.max(1, cursor.position.column), lineContent.length + 1)
+      
       // Cursor decoration
       newDecorations.push({
         range: {
-          startLineNumber: cursor.position.lineNumber,
-          startColumn: cursor.position.column,
-          endLineNumber: cursor.position.lineNumber,
-          endColumn: cursor.position.column,
+          startLineNumber: lineNumber,
+          startColumn: column,
+          endLineNumber: lineNumber,
+          endColumn: column,
         },
         options: {
           className: `collaborator-cursor collaborator-cursor-${userId}`,
@@ -64,10 +74,10 @@ export function CursorOverlay({ editorInstance }: CursorOverlayProps) {
       // Username label with inline style for color
       newDecorations.push({
         range: {
-          startLineNumber: cursor.position.lineNumber,
-          startColumn: cursor.position.column,
-          endLineNumber: cursor.position.lineNumber,
-          endColumn: cursor.position.column,
+          startLineNumber: lineNumber,
+          startColumn: column,
+          endLineNumber: lineNumber,
+          endColumn: column,
         },
         options: {
           afterContentClassName: `collaborator-label collaborator-label-${userId}`,
