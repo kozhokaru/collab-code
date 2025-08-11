@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import { CollaboratorPresence } from '@/components/editor/CollaboratorPresence'
+import { CollaboratorStyles } from '@/components/editor/CollaboratorStyles'
 import { useRealtimeSync } from '@/hooks/useRealtimeSync'
 import { usePersistence } from '@/hooks/usePersistence'
 import { useReconnection } from '@/hooks/useReconnection'
@@ -215,6 +216,9 @@ export default function EditorPage() {
 
       {/* AI Assistant Panel */}
       <AIAssistant isOpen={showAIAssistant} onClose={() => setShowAIAssistant(false)} />
+      
+      {/* Collaborator Styles */}
+      <CollaboratorStyles />
     </div>
   )
 }

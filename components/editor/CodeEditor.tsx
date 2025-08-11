@@ -4,6 +4,7 @@ import { useRef, useEffect } from 'react'
 import Editor from '@monaco-editor/react'
 import type { editor } from 'monaco-editor'
 import { useEditorStore } from '@/store/editorStore'
+import { CursorOverlay } from './CursorOverlay'
 
 interface CodeEditorProps {
   sessionId: string
@@ -102,6 +103,7 @@ export function CodeEditor({
           }
         }}
       />
+      <CursorOverlay editorInstance={editorRef.current} />
     </div>
   )
 }

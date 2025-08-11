@@ -25,6 +25,8 @@ export function CursorOverlay({ editorInstance }: CursorOverlayProps) {
 
     // Add decorations for each collaborator cursor
     cursors.forEach((cursor) => {
+      const userId = cursor.userId.replace(/[^a-zA-Z0-9]/g, '-')
+      
       // Cursor decoration
       newDecorations.push({
         range: {
@@ -34,8 +36,8 @@ export function CursorOverlay({ editorInstance }: CursorOverlayProps) {
           endColumn: cursor.position.column,
         },
         options: {
-          className: 'collaborator-cursor',
-          beforeContentClassName: 'collaborator-cursor-caret',
+          className: `collaborator-cursor collaborator-cursor-${userId}`,
+          beforeContentClassName: `collaborator-cursor-caret collaborator-cursor-${userId}`,
           hoverMessage: { value: cursor.username },
           stickiness: editor.TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges,
           zIndex: 100,
@@ -52,24 +54,23 @@ export function CursorOverlay({ editorInstance }: CursorOverlayProps) {
             endColumn: cursor.selection.endColumn,
           },
           options: {
-            className: 'collaborator-selection',
-            inlineClassName: 'collaborator-selection-inline',
+            className: `collaborator-selection collaborator-selection-${userId}`,
+            inlineClassName: `collaborator-selection-inline collaborator-selection-${userId}`,
             stickiness: editor.TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges,
           },
         })
       }
 
-      // Username label
+      // Username label with inline style for color
       newDecorations.push({
         range: {
           startLineNumber: cursor.position.lineNumber,
           startColumn: cursor.position.column,
           endLineNumber: cursor.position.lineNumber,
-          endColumn: cursor.position.column + 1,
+          endColumn: cursor.position.column,
         },
         options: {
-          afterContentClassName: 'collaborator-label',
-          afterContentText: cursor.username,
+          afterContentClassName: `collaborator-label collaborator-label-${userId}`,
           stickiness: editor.TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges,
         },
       })

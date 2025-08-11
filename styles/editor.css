@@ -1,6 +1,7 @@
 /* Collaborator cursor styles */
 .collaborator-cursor {
   background: transparent !important;
+  position: relative;
 }
 
 .collaborator-cursor-caret::before {
@@ -22,18 +23,19 @@
 }
 
 .collaborator-label::after {
-  content: attr(data-username);
   position: absolute;
-  top: -20px;
-  left: 0;
-  padding: 2px 6px;
-  background: var(--cursor-color, #ff0000);
+  top: -22px;
+  left: 2px;
+  padding: 2px 8px;
+  background: #4C6EF5;
   color: white;
   font-size: 11px;
-  border-radius: 3px;
+  font-weight: 500;
+  border-radius: 4px;
   white-space: nowrap;
   pointer-events: none;
-  z-index: 101;
+  z-index: 1000;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
 
 @keyframes cursor-blink {
