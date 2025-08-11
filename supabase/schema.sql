@@ -79,3 +79,8 @@ BEGIN
   WHERE last_seen < timezone('utc'::text, now()) - INTERVAL '5 minutes';
 END;
 $$ LANGUAGE plpgsql;
+
+-- Enable Realtime for all tables
+ALTER PUBLICATION supabase_realtime ADD TABLE sessions;
+ALTER PUBLICATION supabase_realtime ADD TABLE users;
+ALTER PUBLICATION supabase_realtime ADD TABLE code_snapshots;
