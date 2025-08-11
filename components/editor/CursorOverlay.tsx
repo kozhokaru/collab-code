@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from 'react'
 import { usePresenceStore } from '@/store/presenceStore'
-import { editor } from 'monaco-editor'
+import type { editor } from 'monaco-editor'
 
 interface CursorOverlayProps {
   editorInstance: editor.IStandaloneCodeEditor | null

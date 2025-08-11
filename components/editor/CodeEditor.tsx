@@ -2,7 +2,7 @@
 
 import { useRef, useEffect } from 'react'
 import Editor from '@monaco-editor/react'
-import { editor } from 'monaco-editor'
+import type { editor } from 'monaco-editor'
 import { useEditorStore } from '@/store/editorStore'
 
 interface CodeEditorProps {

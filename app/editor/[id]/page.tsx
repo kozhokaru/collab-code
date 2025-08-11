@@ -2,18 +2,28 @@
 
 import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
-import { CodeEditor } from '@/components/editor/CodeEditor'
+import dynamic from 'next/dynamic'
 import { CollaboratorPresence } from '@/components/editor/CollaboratorPresence'
-import { CursorOverlay } from '@/components/editor/CursorOverlay'
 import { useRealtimeSync } from '@/hooks/useRealtimeSync'
 import { usePersistence } from '@/hooks/usePersistence'
 import { useReconnection } from '@/hooks/useReconnection'
 import { useSessionStore } from '@/store/sessionStore'
 import { useEditorStore } from '@/store/editorStore'
 import { Save, WifiOff, Wifi, Settings, Share2, Download, Sparkles } from 'lucide-react'
-import { editor } from 'monaco-editor'
-import { useRef } from 'react'
 import { AIAssistant } from '@/components/ai/AIAssistant'
+
+// Dynamically import CodeEditor to avoid SSR issues with Monaco
+const CodeEditor = dynamic(
+  () => import('@/components/editor/CodeEditor').then(mod => mod.CodeEditor),
+  { 
+    ssr: false,
+    loading: () => (
+      <div className="h-full w-full flex items-center justify-center">
+        <div className="text-muted-foreground">Loading editor...</div>
+      </div>
+    )
+  }
+)
 
 export default function EditorPage() {
   const params = useParams()
@@ -21,7 +31,6 @@ export default function EditorPage() {
   const [userId, setUserId] = useState<string>('')
   const [username, setUsername] = useState<string>('')
   const [showJoinDialog, setShowJoinDialog] = useState(true)
-  const [editorInstance, setEditorInstance] = useState<editor.IStandaloneCodeEditor | null>(null)
   const [showAIAssistant, setShowAIAssistant] = useState(false)
   
   const { session, currentUser, isConnected, setSession, setCurrentUser } = useSessionStore()
@@ -200,7 +209,6 @@ export default function EditorPage() {
           language={language}
           theme="vs-dark"
         />
-        {editorInstance && <CursorOverlay editorInstance={editorInstance} />}
       </div>
 
       {/* AI Assistant Panel */}
