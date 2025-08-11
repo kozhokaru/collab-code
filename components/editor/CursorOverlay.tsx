@@ -2,10 +2,9 @@
 
 import { useEffect, useRef } from 'react'
 import { usePresenceStore } from '@/store/presenceStore'
-import type { editor } from 'monaco-editor'
 
 interface CursorOverlayProps {
-  editorInstance: editor.IStandaloneCodeEditor | null
+  editorInstance: any // Simplified type to avoid Monaco import issues
 }
 
 export function CursorOverlay({ editorInstance }: CursorOverlayProps) {
@@ -26,7 +25,7 @@ export function CursorOverlay({ editorInstance }: CursorOverlayProps) {
         []
       )
 
-      const newDecorations: editor.IModelDeltaDecoration[] = []
+      const newDecorations: any[] = [] // Simplified type
 
     // Add decorations for each collaborator cursor
     cursors.forEach((cursor) => {
@@ -55,24 +54,35 @@ export function CursorOverlay({ editorInstance }: CursorOverlayProps) {
           className: `collaborator-cursor collaborator-cursor-${userId}`,
           beforeContentClassName: `collaborator-cursor-caret collaborator-cursor-${userId}`,
           hoverMessage: { value: cursor.username },
-          stickiness: editor.TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges,
+          stickiness: 1, // NeverGrowsWhenTypingAtEdges
           zIndex: 100,
         },
       })
 
       // Selection decoration if exists
-      if (cursor.selection) {
+      if (cursor.selection && 
+          typeof cursor.selection.startLineNumber === 'number' &&
+          typeof cursor.selection.startColumn === 'number' &&
+          typeof cursor.selection.endLineNumber === 'number' &&
+          typeof cursor.selection.endColumn === 'number') {
+        
+        // Validate selection range
+        const startLine = Math.min(Math.max(1, cursor.selection.startLineNumber), lineCount)
+        const endLine = Math.min(Math.max(1, cursor.selection.endLineNumber), lineCount)
+        const startCol = Math.max(1, cursor.selection.startColumn)
+        const endCol = Math.max(1, cursor.selection.endColumn)
+        
         newDecorations.push({
           range: {
-            startLineNumber: cursor.selection.startLineNumber,
-            startColumn: cursor.selection.startColumn,
-            endLineNumber: cursor.selection.endLineNumber,
-            endColumn: cursor.selection.endColumn,
+            startLineNumber: startLine,
+            startColumn: startCol,
+            endLineNumber: endLine,
+            endColumn: endCol,
           },
           options: {
             className: `collaborator-selection collaborator-selection-${userId}`,
             inlineClassName: `collaborator-selection-inline collaborator-selection-${userId}`,
-            stickiness: editor.TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges,
+            stickiness: 1, // NeverGrowsWhenTypingAtEdges
           },
         })
       }
@@ -87,7 +97,7 @@ export function CursorOverlay({ editorInstance }: CursorOverlayProps) {
         },
         options: {
           afterContentClassName: `collaborator-label collaborator-label-${userId}`,
-          stickiness: editor.TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges,
+          stickiness: 1, // NeverGrowsWhenTypingAtEdges
         },
       })
     })
