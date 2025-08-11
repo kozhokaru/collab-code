@@ -10,9 +10,10 @@ import { usePersistence } from '@/hooks/usePersistence'
 import { useReconnection } from '@/hooks/useReconnection'
 import { useSessionStore } from '@/store/sessionStore'
 import { useEditorStore } from '@/store/editorStore'
-import { Save, WifiOff, Wifi, Settings, Share2, Download } from 'lucide-react'
+import { Save, WifiOff, Wifi, Settings, Share2, Download, Sparkles } from 'lucide-react'
 import { editor } from 'monaco-editor'
 import { useRef } from 'react'
+import { AIAssistant } from '@/components/ai/AIAssistant'
 
 export default function EditorPage() {
   const params = useParams()
@@ -21,6 +22,7 @@ export default function EditorPage() {
   const [username, setUsername] = useState<string>('')
   const [showJoinDialog, setShowJoinDialog] = useState(true)
   const [editorInstance, setEditorInstance] = useState<editor.IStandaloneCodeEditor | null>(null)
+  const [showAIAssistant, setShowAIAssistant] = useState(false)
   
   const { session, currentUser, isConnected, setSession, setCurrentUser } = useSessionStore()
   const { code, language } = useEditorStore()
@@ -159,6 +161,13 @@ export default function EditorPage() {
             
             <div className="flex items-center gap-2">
               <button
+                onClick={() => setShowAIAssistant(!showAIAssistant)}
+                className={`p-2 hover:bg-accent rounded-md transition-colors ${showAIAssistant ? 'bg-accent' : ''}`}
+                title="AI Assistant"
+              >
+                <Sparkles className="w-4 h-4" />
+              </button>
+              <button
                 onClick={handleShare}
                 className="p-2 hover:bg-accent rounded-md transition-colors"
                 title="Share session"
@@ -193,6 +202,9 @@ export default function EditorPage() {
         />
         {editorInstance && <CursorOverlay editorInstance={editorInstance} />}
       </div>
+
+      {/* AI Assistant Panel */}
+      <AIAssistant isOpen={showAIAssistant} onClose={() => setShowAIAssistant(false)} />
     </div>
   )
 }
