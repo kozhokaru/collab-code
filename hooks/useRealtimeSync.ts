@@ -21,7 +21,8 @@ export function useRealtimeSync({ sessionId, userId }: RealtimeSyncProps) {
     setCollaborators, 
     updateCollaborator, 
     removeCollaborator,
-    setConnected 
+    setConnected,
+    currentUser 
   } = useSessionStore()
   const { setCursor, removeCursor, clearCursors } = usePresenceStore()
 
@@ -107,8 +108,8 @@ export function useRealtimeSync({ sessionId, userId }: RealtimeSyncProps) {
         
         // Track presence
         channel.track({
-          username: 'User',
-          color: generateUserColor(),
+          username: currentUser?.username || 'Anonymous',
+          color: currentUser?.color || generateUserColor(),
           cursor: {
             position: cursorPosition,
             selection: null,
@@ -128,7 +129,7 @@ export function useRealtimeSync({ sessionId, userId }: RealtimeSyncProps) {
       clearCursors()
       setConnected(false)
     }
-  }, [sessionId, userId])
+  }, [sessionId, userId, currentUser])
 
   // Broadcast code changes
   useEffect(() => {
@@ -153,14 +154,14 @@ export function useRealtimeSync({ sessionId, userId }: RealtimeSyncProps) {
         event: 'cursor-change',
         payload: {
           userId,
-          username: 'User',
-          color: generateUserColor(),
+          username: currentUser?.username || 'Anonymous',
+          color: currentUser?.color || generateUserColor(),
           position: cursorPosition,
           selection: null,
         },
       })
     }
-  }, [cursorPosition, userId])
+  }, [cursorPosition, userId, currentUser])
 
   return {
     isConnected: useSessionStore((state) => state.isConnected),

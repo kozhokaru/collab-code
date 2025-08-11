@@ -5,6 +5,7 @@ import Editor from '@monaco-editor/react'
 import type { editor } from 'monaco-editor'
 import { useEditorStore } from '@/store/editorStore'
 import { CursorOverlay } from './CursorOverlay'
+import { CursorLabels } from './CursorLabels'
 
 interface CodeEditorProps {
   sessionId: string
@@ -77,7 +78,7 @@ export function CodeEditor({
   }, [])
 
   return (
-    <div className="h-full w-full">
+    <div className="h-full w-full relative">
       <Editor
         height="100%"
         defaultLanguage={language}
@@ -105,7 +106,12 @@ export function CodeEditor({
           }
         }}
       />
-      {isEditorReady && <CursorOverlay editorInstance={editorRef.current} />}
+      {isEditorReady && (
+        <>
+          <CursorOverlay editorInstance={editorRef.current} />
+          <CursorLabels editorInstance={editorRef.current} />
+        </>
+      )}
     </div>
   )
 }
