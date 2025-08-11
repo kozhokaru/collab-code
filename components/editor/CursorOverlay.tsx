@@ -15,27 +15,33 @@ export function CursorOverlay({ editorInstance }: CursorOverlayProps) {
   useEffect(() => {
     if (!editorInstance) return
 
-    // Check if the editor model is ready
-    const model = editorInstance.getModel()
-    if (!model) return
+    try {
+      // Check if the editor model is ready
+      const model = editorInstance.getModel()
+      if (!model) return
 
-    // Clear previous decorations
-    decorationsRef.current = editorInstance.deltaDecorations(
-      decorationsRef.current,
-      []
-    )
+      // Clear previous decorations
+      decorationsRef.current = editorInstance.deltaDecorations(
+        decorationsRef.current,
+        []
+      )
 
-    const newDecorations: editor.IModelDeltaDecoration[] = []
+      const newDecorations: editor.IModelDeltaDecoration[] = []
 
     // Add decorations for each collaborator cursor
     cursors.forEach((cursor) => {
+      // Skip if cursor data is incomplete
+      if (!cursor || !cursor.position || !cursor.userId || !cursor.username) {
+        return
+      }
+      
       const userId = cursor.userId.replace(/[^a-zA-Z0-9]/g, '-')
       
-      // Validate cursor position
+      // Validate cursor position with safe defaults
       const lineCount = model.getLineCount()
-      const lineNumber = Math.min(Math.max(1, cursor.position.lineNumber), lineCount)
+      const lineNumber = Math.min(Math.max(1, cursor.position.lineNumber || 1), lineCount)
       const lineContent = model.getLineContent(lineNumber)
-      const column = Math.min(Math.max(1, cursor.position.column), lineContent.length + 1)
+      const column = Math.min(Math.max(1, cursor.position.column || 1), lineContent.length + 1)
       
       // Cursor decoration
       newDecorations.push({
@@ -86,19 +92,26 @@ export function CursorOverlay({ editorInstance }: CursorOverlayProps) {
       })
     })
 
-    // Apply new decorations
-    decorationsRef.current = editorInstance.deltaDecorations(
-      decorationsRef.current,
-      newDecorations
-    )
+      // Apply new decorations
+      decorationsRef.current = editorInstance.deltaDecorations(
+        decorationsRef.current,
+        newDecorations
+      )
+    } catch (error) {
+      console.error('Error updating cursor decorations:', error)
+    }
 
     return () => {
       // Cleanup decorations
-      if (editorInstance) {
-        decorationsRef.current = editorInstance.deltaDecorations(
-          decorationsRef.current,
-          []
-        )
+      try {
+        if (editorInstance && editorInstance.getModel()) {
+          decorationsRef.current = editorInstance.deltaDecorations(
+            decorationsRef.current,
+            []
+          )
+        }
+      } catch (error) {
+        console.error('Error cleaning up decorations:', error)
       }
     }
   }, [cursors, editorInstance])
