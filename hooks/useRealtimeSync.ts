@@ -26,6 +26,10 @@ export function useRealtimeSync({ sessionId, userId }: RealtimeSyncProps) {
   const { setCursor, removeCursor, clearCursors } = usePresenceStore()
 
   useEffect(() => {
+    // Skip if userId is not ready
+    if (!userId || userId === 'pending') {
+      return
+    }
     // Create channel for this session
     const channel = supabase.channel(`session:${sessionId}`, {
       config: {
@@ -128,7 +132,7 @@ export function useRealtimeSync({ sessionId, userId }: RealtimeSyncProps) {
 
   // Broadcast code changes
   useEffect(() => {
-    if (channelRef.current && code !== undefined) {
+    if (channelRef.current && code !== undefined && userId && userId !== 'pending') {
       channelRef.current.send({
         type: 'broadcast',
         event: 'code-change',
@@ -143,7 +147,7 @@ export function useRealtimeSync({ sessionId, userId }: RealtimeSyncProps) {
 
   // Broadcast cursor changes
   useEffect(() => {
-    if (channelRef.current && cursorPosition) {
+    if (channelRef.current && cursorPosition && userId && userId !== 'pending') {
       channelRef.current.send({
         type: 'broadcast',
         event: 'cursor-change',

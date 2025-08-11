@@ -23,6 +23,11 @@ export function usePersistence({
 
   // Save code to server
   const saveCode = useCallback(async (forceSnapshot = false) => {
+    // Skip if userId is not ready
+    if (!userId || userId === 'pending') {
+      return
+    }
+    
     if (code === lastSavedCode.current && !forceSnapshot) {
       return // No changes to save
     }
@@ -144,8 +149,10 @@ export function usePersistence({
 
   // Load persisted code on mount
   useEffect(() => {
-    loadPersistedCode()
-  }, [loadPersistedCode])
+    if (userId && userId !== 'pending') {
+      loadPersistedCode()
+    }
+  }, [loadPersistedCode, userId])
 
   // Handle reconnection
   useEffect(() => {

@@ -27,9 +27,9 @@ export default function EditorPage() {
   const { session, currentUser, isConnected, setSession, setCurrentUser } = useSessionStore()
   const { code, language } = useEditorStore()
   
-  // Initialize hooks (only after joining)
-  const { channel } = userId ? useRealtimeSync({ sessionId, userId }) : { channel: null }
-  const { saveCode, isSaved } = userId ? usePersistence({ sessionId, userId }) : { saveCode: () => {}, isSaved: true }
+  // Always call hooks, but pass empty userId when not joined
+  const { channel } = useRealtimeSync({ sessionId, userId: userId || 'pending' })
+  const { saveCode, isSaved } = usePersistence({ sessionId, userId: userId || 'pending' })
   const { isReconnecting, retryCount } = useReconnection({
     onReconnect: () => console.log('Reconnected!'),
     onDisconnect: () => console.log('Disconnected!'),
