@@ -20,17 +20,20 @@ export function usePersistence({
   const lastSavedCode = useRef<string>('')
   const saveTimeoutRef = useRef<NodeJS.Timeout>()
   const lastSaveTime = useRef<number>(Date.now())
+  const isSaving = useRef<boolean>(false)
 
   // Save code to server
   const saveCode = useCallback(async (forceSnapshot = false) => {
-    // Skip if userId is not ready
-    if (!userId || userId === 'pending') {
+    // Skip if userId is not ready or already saving
+    if (!userId || userId === 'pending' || isSaving.current) {
       return
     }
     
     if (code === lastSavedCode.current && !forceSnapshot) {
       return // No changes to save
     }
+    
+    isSaving.current = true
 
     try {
       // Update session code
@@ -68,6 +71,8 @@ export function usePersistence({
       // Still save to localStorage on error
       localStorage.setItem(`session_${sessionId}_code`, code)
       localStorage.setItem(`session_${sessionId}_backup`, 'true')
+    } finally {
+      isSaving.current = false
     }
   }, [code, sessionId, userId])
 
@@ -109,24 +114,23 @@ export function usePersistence({
   // Handle reconnection
   const handleReconnection = useCallback(() => {
     if (isConnected) {
-      console.log('Reconnected to session, syncing code...')
+      console.log('Reconnected to session, checking for unsaved changes...')
       
       // Check if we have unsaved changes
       const localCode = localStorage.getItem(`session_${sessionId}_code`)
       const localTimestamp = parseInt(localStorage.getItem(`session_${sessionId}_timestamp`) || '0')
       const currentTime = Date.now()
       
-      // If local changes are recent (within last minute), save them
+      // If local changes are recent (within last minute) and different, save them
       if (localCode && (currentTime - localTimestamp) < 60000) {
-        if (localCode !== lastSavedCode.current) {
-          saveCode(false)
+        if (localCode !== lastSavedCode.current && localCode !== code) {
+          // Update the code store with local changes
+          useEditorStore.getState().setCode(localCode)
+          lastSavedCode.current = localCode
         }
-      } else {
-        // Otherwise, load latest from server
-        loadPersistedCode()
       }
     }
-  }, [isConnected, sessionId, saveCode, loadPersistedCode])
+  }, [isConnected, sessionId, code])
 
   // Auto-save effect
   useEffect(() => {
@@ -147,17 +151,19 @@ export function usePersistence({
     }
   }, [code, autoSaveInterval, saveCode])
 
-  // Load persisted code on mount
+  // Load persisted code on mount (only once)
   useEffect(() => {
     if (userId && userId !== 'pending') {
       loadPersistedCode()
     }
-  }, [loadPersistedCode, userId])
+  }, [userId]) // Remove loadPersistedCode from deps to prevent loops
 
   // Handle reconnection
   useEffect(() => {
-    handleReconnection()
-  }, [isConnected, handleReconnection])
+    if (isConnected && userId && userId !== 'pending') {
+      handleReconnection()
+    }
+  }, [isConnected]) // Simplify deps to prevent loops
 
   // Save on unmount or page unload
   useEffect(() => {

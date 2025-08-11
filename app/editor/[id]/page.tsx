@@ -44,24 +44,26 @@ export default function EditorPage() {
     onDisconnect: () => console.log('Disconnected!'),
   })
 
-  // Load session data
+  // Load session data (only once on mount)
   useEffect(() => {
-    const loadSession = async () => {
-      try {
-        const response = await fetch(`/api/sessions?id=${sessionId}`)
-        if (response.ok) {
-          const sessionData = await response.json()
-          setSession(sessionData)
-          useEditorStore.getState().setCode(sessionData.code)
-          useEditorStore.getState().setLanguage(sessionData.language)
+    if (!session) {  // Only load if not already loaded
+      const loadSession = async () => {
+        try {
+          const response = await fetch(`/api/sessions?id=${sessionId}`)
+          if (response.ok) {
+            const sessionData = await response.json()
+            setSession(sessionData)
+            useEditorStore.getState().setCode(sessionData.code)
+            useEditorStore.getState().setLanguage(sessionData.language)
+          }
+        } catch (error) {
+          console.error('Failed to load session:', error)
         }
-      } catch (error) {
-        console.error('Failed to load session:', error)
       }
+      
+      loadSession()
     }
-    
-    loadSession()
-  }, [sessionId, setSession])
+  }, [sessionId]) // Remove setSession from deps
 
   const joinSession = async () => {
     if (!username.trim()) return
