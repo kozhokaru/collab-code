@@ -12,13 +12,15 @@ interface CodeEditorProps {
   language?: string
   theme?: 'vs-dark' | 'light'
   readOnly?: boolean
+  currentUserId?: string
 }
 
 export function CodeEditor({ 
   sessionId, 
   language = 'javascript',
   theme = 'vs-dark',
-  readOnly = false
+  readOnly = false,
+  currentUserId
 }: CodeEditorProps) {
   const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null)
   const [isEditorReady, setIsEditorReady] = useState(false)
@@ -109,7 +111,7 @@ export function CodeEditor({
       {isEditorReady && (
         <>
           <CursorOverlay editorInstance={editorRef.current} />
-          <CursorLabels editorInstance={editorRef.current} />
+          <CursorLabels editorInstance={editorRef.current} currentUserId={currentUserId} />
         </>
       )}
     </div>

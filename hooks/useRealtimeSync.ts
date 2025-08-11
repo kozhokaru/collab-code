@@ -14,6 +14,8 @@ interface RealtimeSyncProps {
 
 export function useRealtimeSync({ sessionId, userId }: RealtimeSyncProps) {
   const channelRef = useRef<RealtimeChannel | null>(null)
+  const cursorBroadcastTimeout = useRef<NodeJS.Timeout>()
+  const codeBroadcastTimeout = useRef<NodeJS.Timeout>()
   const supabase = createClient()
   
   const { code, setCode, cursorPosition } = useEditorStore()
@@ -131,35 +133,63 @@ export function useRealtimeSync({ sessionId, userId }: RealtimeSyncProps) {
     }
   }, [sessionId, userId, currentUser])
 
-  // Broadcast code changes
+  // Broadcast code changes with debouncing
   useEffect(() => {
-    if (channelRef.current && code !== undefined && userId && userId !== 'pending') {
-      channelRef.current.send({
-        type: 'broadcast',
-        event: 'code-change',
-        payload: {
-          userId,
-          code,
-          timestamp: new Date().toISOString(),
-        },
-      })
+    // Clear existing timeout
+    if (codeBroadcastTimeout.current) {
+      clearTimeout(codeBroadcastTimeout.current)
+    }
+    
+    // Only broadcast after 100ms of no code changes (faster than cursor for better sync)
+    codeBroadcastTimeout.current = setTimeout(() => {
+      if (channelRef.current && code !== undefined && userId && userId !== 'pending') {
+        channelRef.current.send({
+          type: 'broadcast',
+          event: 'code-change',
+          payload: {
+            userId,
+            code,
+            timestamp: new Date().toISOString(),
+          },
+        })
+      }
+    }, 100)
+    
+    return () => {
+      if (codeBroadcastTimeout.current) {
+        clearTimeout(codeBroadcastTimeout.current)
+      }
     }
   }, [code, userId])
 
-  // Broadcast cursor changes
+  // Broadcast cursor changes with debouncing
   useEffect(() => {
-    if (channelRef.current && cursorPosition && userId && userId !== 'pending') {
-      channelRef.current.send({
-        type: 'broadcast',
-        event: 'cursor-change',
-        payload: {
-          userId,
-          username: currentUser?.username || 'Anonymous',
-          color: currentUser?.color || generateUserColor(),
-          position: cursorPosition,
-          selection: null,
-        },
-      })
+    // Clear existing timeout
+    if (cursorBroadcastTimeout.current) {
+      clearTimeout(cursorBroadcastTimeout.current)
+    }
+    
+    // Only broadcast after 200ms of no cursor changes
+    cursorBroadcastTimeout.current = setTimeout(() => {
+      if (channelRef.current && cursorPosition && userId && userId !== 'pending') {
+        channelRef.current.send({
+          type: 'broadcast',
+          event: 'cursor-change',
+          payload: {
+            userId,
+            username: currentUser?.username || 'Anonymous',
+            color: currentUser?.color || generateUserColor(),
+            position: cursorPosition,
+            selection: null,
+          },
+        })
+      }
+    }, 200)
+    
+    return () => {
+      if (cursorBroadcastTimeout.current) {
+        clearTimeout(cursorBroadcastTimeout.current)
+      }
     }
   }, [cursorPosition, userId, currentUser])
 

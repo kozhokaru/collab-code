@@ -13,9 +13,10 @@ interface CursorLabelPosition {
 
 interface CursorLabelsProps {
   editorInstance: any
+  currentUserId?: string
 }
 
-export function CursorLabels({ editorInstance }: CursorLabelsProps) {
+export function CursorLabels({ editorInstance, currentUserId }: CursorLabelsProps) {
   const { cursors } = usePresenceStore()
   const [labelPositions, setLabelPositions] = useState<CursorLabelPosition[]>([])
   const containerRef = useRef<HTMLDivElement>(null)
@@ -28,6 +29,8 @@ export function CursorLabels({ editorInstance }: CursorLabelsProps) {
       
       cursors.forEach((cursor) => {
         if (!cursor?.userId || !cursor?.username || !cursor?.position) return
+        // Skip current user's cursor
+        if (cursor.userId === currentUserId) return
         
         try {
           // Get the position in pixels for the cursor
@@ -69,15 +72,15 @@ export function CursorLabels({ editorInstance }: CursorLabelsProps) {
       updateLabelPositions()
     })
 
-    // Set up interval to update positions regularly (for smooth following)
-    const intervalId = setInterval(updateLabelPositions, 100)
+    // Set up interval to update positions regularly (reduced frequency to prevent jitter)
+    const intervalId = setInterval(updateLabelPositions, 250)
 
     return () => {
       scrollDisposable?.dispose()
       layoutDisposable?.dispose()
       clearInterval(intervalId)
     }
-  }, [cursors, editorInstance])
+  }, [cursors, editorInstance, currentUserId])
 
   if (!editorInstance) return null
 

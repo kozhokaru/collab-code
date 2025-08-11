@@ -211,6 +211,7 @@ export default function EditorPage() {
           sessionId={sessionId} 
           language={language}
           theme="vs-dark"
+          currentUserId={userId}
         />
       </div>
 
