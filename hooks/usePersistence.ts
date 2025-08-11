@@ -19,7 +19,7 @@ export function usePersistence({
   const { session, isConnected } = useSessionStore()
   const lastSavedCode = useRef<string>('')
   const saveTimeoutRef = useRef<NodeJS.Timeout>()
-  const lastSaveTime = useRef<number>(Date.now())
+  const lastSnapshotTime = useRef<number>(Date.now())
   const isSaving = useRef<boolean>(false)
 
   // Save code to server
@@ -29,7 +29,10 @@ export function usePersistence({
       return
     }
     
-    if (code === lastSavedCode.current && !forceSnapshot) {
+    // Get latest code from store
+    const currentCode = useEditorStore.getState().code
+    
+    if (currentCode === lastSavedCode.current && !forceSnapshot) {
       return // No changes to save
     }
     
@@ -42,39 +45,39 @@ export function usePersistence({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           id: sessionId,
-          code,
+          code: currentCode,
         }),
       })
 
       // Create snapshot if significant time has passed or forced
-      const timeSinceLastSave = Date.now() - lastSaveTime.current
-      if (forceSnapshot || timeSinceLastSave > 30000) { // Snapshot every 30 seconds
+      const timeSinceLastSnapshot = Date.now() - lastSnapshotTime.current
+      if (forceSnapshot || timeSinceLastSnapshot > 30000) { // Snapshot every 30 seconds
         await fetch('/api/snapshots', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             sessionId,
             userId,
-            content: code,
+            content: currentCode,
           }),
         })
-        lastSaveTime.current = Date.now()
+        lastSnapshotTime.current = Date.now()
       }
 
-      lastSavedCode.current = code
+      lastSavedCode.current = currentCode
       
       // Store in localStorage as backup
-      localStorage.setItem(`session_${sessionId}_code`, code)
+      localStorage.setItem(`session_${sessionId}_code`, currentCode)
       localStorage.setItem(`session_${sessionId}_timestamp`, Date.now().toString())
     } catch (error) {
       console.error('Failed to save code:', error)
       // Still save to localStorage on error
-      localStorage.setItem(`session_${sessionId}_code`, code)
+      localStorage.setItem(`session_${sessionId}_code`, currentCode)
       localStorage.setItem(`session_${sessionId}_backup`, 'true')
     } finally {
       isSaving.current = false
     }
-  }, [code, sessionId, userId])
+  }, [sessionId, userId]) // Remove code from deps since we use it via closure
 
   // Load persisted code on mount
   const loadPersistedCode = useCallback(async () => {
@@ -132,8 +135,13 @@ export function usePersistence({
     }
   }, [isConnected, sessionId, code])
 
-  // Auto-save effect
+  // Auto-save effect with proper debouncing
   useEffect(() => {
+    // Skip if not ready
+    if (!userId || userId === 'pending' || !code) {
+      return
+    }
+
     // Clear any existing timeout
     if (saveTimeoutRef.current) {
       clearTimeout(saveTimeoutRef.current)
@@ -141,7 +149,9 @@ export function usePersistence({
 
     // Set up new timeout for auto-save
     saveTimeoutRef.current = setTimeout(() => {
-      saveCode(false)
+      if (code !== lastSavedCode.current) {
+        saveCode(false)
+      }
     }, autoSaveInterval)
 
     return () => {
@@ -149,7 +159,7 @@ export function usePersistence({
         clearTimeout(saveTimeoutRef.current)
       }
     }
-  }, [code, autoSaveInterval, saveCode])
+  }, [code, userId]) // Simplified deps to prevent loops
 
   // Load persisted code on mount (only once)
   useEffect(() => {
