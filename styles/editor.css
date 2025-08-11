@@ -1,0 +1,23 @@
+/* Base styles for collaborator cursors */
+[class*="collaborator-cursor-"] {
+  position: relative;
+}
+
+[class*="collaborator-label-"] {
+  position: relative;
+}
+
+/* Animation for cursor blinking */
+@keyframes cursor-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* Custom scrollbar for editor */
+.monaco-editor .monaco-scrollable-element > .scrollbar > .slider {
+  background: rgba(100, 100, 100, 0.2);
+}
+
+.monaco-editor .monaco-scrollable-element > .scrollbar > .slider:hover {
+  background: rgba(100, 100, 100, 0.4);
+}
