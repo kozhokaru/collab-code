@@ -18,15 +18,23 @@ interface CursorData {
 
 interface PresenceState {
   cursors: Map<string, CursorData>
+  currentUserId: string | null
   setCursor: (userId: string, cursor: CursorData) => void
   removeCursor: (userId: string) => void
   clearCursors: () => void
+  setCurrentUserId: (userId: string | null) => void
 }
 
 export const usePresenceStore = create<PresenceState>((set) => ({
   cursors: new Map(),
+  currentUserId: null,
   setCursor: (userId, cursor) =>
     set((state) => {
+      // Never store current user's cursor
+      if (userId === state.currentUserId) {
+        console.warn(`Attempted to set current user cursor (${userId}), skipping`)
+        return state
+      }
       const newCursors = new Map(state.cursors)
       newCursors.set(userId, cursor)
       return { cursors: newCursors }
@@ -38,4 +46,5 @@ export const usePresenceStore = create<PresenceState>((set) => ({
       return { cursors: newCursors }
     }),
   clearCursors: () => set({ cursors: new Map() }),
+  setCurrentUserId: (userId) => set({ currentUserId: userId }),
 }))

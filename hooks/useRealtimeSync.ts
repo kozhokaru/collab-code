@@ -26,13 +26,18 @@ export function useRealtimeSync({ sessionId, userId }: RealtimeSyncProps) {
     setConnected,
     currentUser 
   } = useSessionStore()
-  const { setCursor, removeCursor, clearCursors } = usePresenceStore()
+  const { setCursor, removeCursor, clearCursors, setCurrentUserId } = usePresenceStore()
 
   useEffect(() => {
     // Skip if userId is not ready
     if (!userId || userId === 'pending') {
       return
     }
+    
+    // Set current user ID in presence store for filtering
+    setCurrentUserId(userId)
+    console.log('Setting current user ID for filtering:', userId)
+    
     // Create channel for this session
     const channel = supabase.channel(`session:${sessionId}`, {
       config: {
@@ -63,7 +68,8 @@ export function useRealtimeSync({ sessionId, userId }: RealtimeSyncProps) {
         // Update cursors
         clearCursors()
         collaborators.forEach((collaborator: any) => {
-          if (collaborator.id !== userId && collaborator.cursor) {
+          // Double-check to prevent setting current user's cursor
+          if (collaborator.id !== userId && collaborator.cursor && collaborator.id !== currentUser?.id) {
             setCursor(collaborator.id, {
               userId: collaborator.id,
               username: collaborator.username,
@@ -91,7 +97,8 @@ export function useRealtimeSync({ sessionId, userId }: RealtimeSyncProps) {
         }
       })
       .on('broadcast', { event: 'cursor-change' }, ({ payload }) => {
-        if (payload.userId !== userId) {
+        // Double-check to prevent setting current user's cursor
+        if (payload.userId !== userId && payload.userId !== currentUser?.id) {
           setCursor(payload.userId, {
             userId: payload.userId,
             username: payload.username,
@@ -130,6 +137,7 @@ export function useRealtimeSync({ sessionId, userId }: RealtimeSyncProps) {
       channelRef.current = null
       clearCursors()
       setConnected(false)
+      setCurrentUserId(null)
     }
   }, [sessionId, userId, currentUser])
 
