@@ -36,6 +36,7 @@ export function CursorOverlay({ editorInstance }: CursorOverlayProps) {
         
         // Simple cursor position - just add a marker, no complex validation
         if (cursor.position.lineNumber && cursor.position.column) {
+          // Add cursor line decoration
           newDecorations.push({
             range: {
               startLineNumber: cursor.position.lineNumber,
@@ -45,7 +46,22 @@ export function CursorOverlay({ editorInstance }: CursorOverlayProps) {
             },
             options: {
               className: `collaborator-cursor-${userId}`,
-              hoverMessage: { value: cursor.username },
+              beforeContentClassName: `collaborator-cursor-caret-${userId}`,
+              stickiness: 1,
+            },
+          })
+          
+          // Add username label as a separate decoration
+          newDecorations.push({
+            range: {
+              startLineNumber: cursor.position.lineNumber,
+              startColumn: cursor.position.column,
+              endLineNumber: cursor.position.lineNumber,
+              endColumn: cursor.position.column,
+            },
+            options: {
+              afterContentClassName: `collaborator-label-${userId}`,
+              afterContentText: ` ${cursor.username} `,
               stickiness: 1,
             },
           })

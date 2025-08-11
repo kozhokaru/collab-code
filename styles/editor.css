@@ -1,37 +1,13 @@
-/* Collaborator cursor styles - simplified */
+/* Base styles for collaborator cursors */
 [class*="collaborator-cursor-"] {
   position: relative;
 }
 
-[class*="collaborator-cursor-"]::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 0;
-  width: 2px;
-  height: 20px;
-  background: var(--cursor-color, #4C6EF5);
-  animation: cursor-blink 1s ease-in-out infinite;
-  z-index: 100;
+[class*="collaborator-label-"] {
+  position: relative;
 }
 
-[class*="collaborator-cursor-"]::after {
-  content: attr(data-username);
-  position: absolute;
-  top: -22px;
-  left: 2px;
-  padding: 2px 8px;
-  background: var(--cursor-color, #4C6EF5);
-  color: white;
-  font-size: 11px;
-  font-weight: 500;
-  border-radius: 4px;
-  white-space: nowrap;
-  pointer-events: none;
-  z-index: 1000;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-}
-
+/* Animation for cursor blinking */
 @keyframes cursor-blink {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.5; }
