@@ -77,7 +77,7 @@ export function usePersistence({
     } finally {
       isSaving.current = false
     }
-  }, [sessionId, userId]) // Remove code from deps since we use it via closure
+  }, [sessionId, userId])
 
   // Load persisted code on mount
   const loadPersistedCode = useCallback(async () => {
@@ -137,8 +137,8 @@ export function usePersistence({
 
   // Auto-save effect with proper debouncing
   useEffect(() => {
-    // Skip if not ready
-    if (!userId || userId === 'pending' || !code) {
+    // Skip if not ready or code hasn't actually changed
+    if (!userId || userId === 'pending' || !code || code === lastSavedCode.current) {
       return
     }
 
@@ -148,9 +148,11 @@ export function usePersistence({
     }
 
     // Set up new timeout for auto-save
-    saveTimeoutRef.current = setTimeout(() => {
-      if (code !== lastSavedCode.current) {
-        saveCode(false)
+    saveTimeoutRef.current = setTimeout(async () => {
+      // Double check the code has changed before saving
+      const currentCode = useEditorStore.getState().code
+      if (currentCode !== lastSavedCode.current && !isSaving.current) {
+        await saveCode(false)
       }
     }, autoSaveInterval)
 
@@ -159,7 +161,7 @@ export function usePersistence({
         clearTimeout(saveTimeoutRef.current)
       }
     }
-  }, [code, userId]) // Simplified deps to prevent loops
+  }, [code, userId, autoSaveInterval]) // Include autoSaveInterval
 
   // Load persisted code on mount (only once)
   useEffect(() => {
